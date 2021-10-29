@@ -1,1 +1,153 @@
-Hi this is my A3 code
+import pygame
+import sys
+import random
+from pygame.locals import *
+
+# initialize the environment
+pygame.init()  # initialize pygame as the used package
+pygame.mixer.init()  # initialize the mixer to generate sound properly
+
+# create a window
+playSurface = pygame.display.set_mode((800, 800))  # define the size of the window
+pygame.display.set_caption("SNAKE")  # define the title of the widow of this programme
+
+# add music
+pygame.mixer.music.load("BackgroundMusic.mp3")
+pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.play(-1)
+
+
+# add the condition of closing the programme
+def gameover():
+    pygame.quit()  # close the pygame window
+    sys.exit()  # exit the programme
+
+
+# set the color of the objects
+snakeBody_color = pygame.Color(0, 255, 0)  # green
+food_color = pygame.Color(255, 153, 0)  # orange
+
+
+def main():
+    time_clock = pygame.time.Clock()  # define a variable to control the speed
+
+    # display the item of the snake and the foods
+    snakePosition = [200, 200]  # the initial position of the snake head
+    snakeBodys = [[200, 200], [180, 200], [160, 200]]  # the initial position of the snake body
+    foodPosition = [500, 500]  # the initial position of the first food
+    foodTotal = 1  # the number of foods
+    foodNumber = 1  # the variable to control speed
+    direction = 'right'  # the initial moving direction of the snake
+    changeDirection = direction  # define a variable to control the direction and relate it to the key
+
+    speed = 4  # define the initial speed
+
+    while True:
+        for event in pygame.event.get():  # get the events
+
+            # quit the event
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            # events of the key pressed
+            elif event.type == KEYDOWN:
+                if event.key == K_RIGHT or event.key == K_d:
+                    changeDirection = 'right'
+
+                if event.key == K_LEFT or event.key == K_a:
+                    changeDirection = 'left'
+
+                if event.key == K_UP or event.key == K_w:
+                    changeDirection = 'up'
+
+                if event.key == K_DOWN or event.key == K_s:
+                    changeDirection = 'down'
+
+                if event.key == K_ESCAPE:
+                    pygame.event.post(pygame.event.Event(QUIT))
+
+        # forbid the moving just opposite the direction
+        if changeDirection == 'right' and not direction == 'left':
+            direction = changeDirection
+
+        if changeDirection == 'left' and not direction == 'right':
+            direction = changeDirection
+
+        if changeDirection == 'up' and not direction == 'down':
+            direction = changeDirection
+
+        if changeDirection == 'down' and not direction == 'up':
+            direction = changeDirection
+
+        # the movement event
+        if direction == 'right':
+            snakePosition[0] += 20
+
+        if direction == 'left':
+            snakePosition[0] -= 20
+
+        if direction == 'up':
+            snakePosition[1] -= 20
+
+        if direction == 'down':
+            snakePosition[1] += 20
+
+        snakeBodys.insert(0, list(snakePosition))  # add the length of the snake
+
+        # judge if getting the food
+        if snakePosition[0] == foodPosition[0] and snakePosition[1] == foodPosition[1]:
+            foodTotal = 0
+        else:
+            snakeBodys.pop()
+
+        # regenerate a new food
+        if foodTotal == 0:
+            x = random.randrange(1, 40)
+            y = random.randrange(1, 40)
+            foodPosition = [int(x * 20), int(y * 20)]
+            foodTotal = 1
+            foodNumber += 1
+
+            # do not generate the food on the snake body
+        for body in snakeBodys[1:]:
+            if foodPosition[0] == body[0] and foodPosition[1] == body[1]:
+                foodTotal = 0
+                foodNumber -= 1
+
+        # increase the speed
+        if foodNumber % 5 == 0:
+            speed += 1
+            foodNumber = 1
+
+        # the background of the programme
+        background = pygame.image.load("background.jpg")
+        playSurface.blit(background, (0, 0))
+        pygame.display.update()
+
+        # draw the snake and foods
+        for position in snakeBodys:
+            pygame.draw.rect(playSurface, snakeBody_color, Rect(position[0], position[1], 20, 20))
+            pygame.draw.rect(playSurface, food_color, Rect(foodPosition[0], foodPosition[1], 20, 20))
+
+        pygame.display.flip()  # refresh the display
+
+        # end the game if over the bounder
+        if snakePosition[0] > 800 or snakePosition[0] < 0:
+            gameover()
+
+        elif snakePosition[1] > 800 or snakePosition[1] < 0:
+            gameover()
+
+        # end the game if touch itself
+        for body in snakeBodys[1:]:
+            if snakePosition[0] == body[0] and snakePosition[1] == body[1]:
+                gameover()
+
+        # control the speed
+        time_clock.tick(speed)
+
+
+# the entrance
+if __name__ == "__main__":
+    main()
